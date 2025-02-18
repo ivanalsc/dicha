@@ -53,9 +53,18 @@ export default function AlbumForm() {
       return;
     }
 
-    const { error } = await supabase.from("albums").insert([
-      { title, location, description, is_public: isPublic, user_id: user.id }
-    ]);
+    // Aquí cambiamos la lógica para actualizar el álbum
+    const { error } = await supabase
+      .from("albums")
+      .upsert([
+        {
+          title,
+          location,
+          description,
+          is_public: isPublic,
+          user_id: user.id,
+        },
+      ]);
 
     setLoading(false);
     if (error) alert(error.message);
@@ -70,11 +79,11 @@ export default function AlbumForm() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg mx-auto p-6 bg-[#f9f5f0] shadow-md rounded-xl">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Crear un álbum</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">Actualizar álbum</h2>
 
       {isSuccess && (
         <div className="p-4 mb-4 bg-green-100 text-green-800 rounded-md border border-green-200">
-          ¡Álbum creado con éxito!
+          ¡Álbum actualizado con éxito!
         </div>
       )}
 
@@ -86,10 +95,10 @@ export default function AlbumForm() {
           onChange={(e) => setTitle(e.target.value)}
           required
         />
-        
+
         <Label htmlFor="location">Ubicación</Label>
         <Input id="location" value={location} onChange={handleLocationChange} placeholder="Ej: Buenos Aires" />
-        
+
         {suggestions.length > 0 && (
           <ul className="bg-white border mt-1 rounded-md shadow">
             {suggestions.map((place, index) => (
@@ -106,7 +115,7 @@ export default function AlbumForm() {
             ))}
           </ul>
         )}
-        
+
         <Textarea
           placeholder="Describe tu experiencia"
           value={description}
@@ -120,7 +129,7 @@ export default function AlbumForm() {
         </div>
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Creando...' : 'Crear álbum'}
+          {loading ? 'Actualizando...' : 'Actualizar álbum'}
         </Button>
       </form>
     </motion.div>
