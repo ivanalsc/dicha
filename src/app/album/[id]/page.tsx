@@ -220,6 +220,24 @@ export default function AlbumDetail({
     }
   };
 
+  const handleSaveSong = async (song: Song) => {
+    try {
+      const { error } = await supabase.from("album_media").insert({
+        album_id: id,
+        type: "music",
+        url: song.imageUrl,
+        content: JSON.stringify(song),
+      });
+
+      if (error) throw error;
+
+      await fetchAlbumAndMedia();
+      router.refresh();
+    } catch (error) {
+      console.error("Error saving song:", error);
+    }
+  };
+
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-[200px]">
@@ -302,19 +320,6 @@ export default function AlbumDetail({
               />
               <span>Público</span>
             </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditForm(album);
-                }}
-                className="bg-white hover:bg-gray-100"
-              >
-                Cancelar
-              </Button>
-              <Button onClick={handleSave}>Guardar</Button>
-            </div>
           </div>
         )}
 
@@ -336,13 +341,10 @@ export default function AlbumDetail({
                   disabled={uploadingMedia}
                 />
               </div>
-              <MusicSearch setSelectedSong={setSelectedSong} />
-
-              {!isEditing && (
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creando..." : "Crear álbum"}
-                </Button>
-              )}
+              <MusicSearch 
+                setSelectedSong={setSelectedSong} 
+                onSaveSong={handleSaveSong}
+              />
             </div>
 
             {uploadingMedia && (
@@ -375,11 +377,30 @@ export default function AlbumDetail({
                       className="w-full h-48 object-cover rounded"
                     />
                   )}
-                  {item.type === "music" && item.url && (
-                    <audio controls className="w-full mt-2">
-                      <source src={item.url} type="audio/mpeg" />
-                      Tu navegador no soporta el elemento de audio.
-                    </audio>
+                  {item.type === "music" && (
+                    <div>
+                      {item.url && (
+                        <img
+                          src={item.url}
+                          alt="Album cover"
+                          className="w-full h-48 object-cover rounded"
+                        />
+                      )}
+                      {item.content && (
+                        <div className="mt-2">
+                          {(() => {
+                            const songData = JSON.parse(item.content);
+                            return (
+                              <>
+                                <h4 className="font-semibold">{songData.title}</h4>
+                                <p className="text-sm text-gray-600">Por {songData.artist}</p>
+                                <p className="text-sm text-gray-600">{songData.album}</p>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
                   )}
                   {item.type === "text" && item.content && (
                     <p className="text-sm text-gray-700 mt-2">{item.content}</p>
@@ -397,6 +418,22 @@ export default function AlbumDetail({
                 </div>
               ))}
             </div>
+
+            {isEditing && (
+              <div className="flex justify-end space-x-2 mt-8 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditForm(album);
+                  }}
+                  className="bg-white hover:bg-gray-100"
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleSave}>Guardar</Button>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
